@@ -40,22 +40,26 @@ def calculate_subtotal(items: list[LineItem]) -> Decimal:
     return subtotal
 
 
-def calculate_total(items: list[LineItem], coupon: Coupon | None) -> Decimal:
-    """Return the order total after applying at most one coupon.
+def calculate_total(items: list[LineItem], coupons: list[Coupon] | None = None) -> Decimal:
+    """Return the order total after applying stacked coupons.
 
-    A fixed coupon subtracts its value directly from the subtotal. A percent
-    coupon subtracts `subtotal * value / 100`. The result is clamped at
-    Decimal("0.00") and quantized to two decimal places using ROUND_HALF_UP.
+    At most one fixed coupon and one percent coupon may be applied together;
+    passing two coupons of the same kind raises ValueError. The fixed coupon
+    is applied first, and the percent coupon is applied to the subtotal,
+    quantized to two decimal places using ROUND_HALF_UP.
     """
     subtotal = calculate_subtotal(items)
+    coupons = coupons or []
 
-    if coupon is None:
-        discount = ZERO
-    elif coupon.kind == "fixed":
-        discount = coupon.value
-    else:
-        discount = subtotal * coupon.value / Decimal("100")
+    fixed_coupons = [c for c in coupons if c.kind == "fixed"]
+    percent_coupons = [c for c in coupons if c.kind == "percent"]
+    if len(fixed_coupons) > 1 or len(percent_coupons) > 1:
+        raise ValueError("only one coupon of each kind may be applied")
 
-    total = subtotal - discount
-    total = max(total, ZERO)
+    total = subtotal
+    if fixed_coupons:
+        total -= fixed_coupons[0].value
+    if percent_coupons:
+        total -= subtotal * percent_coupons[0].value / Decimal("100")
+
     return total.quantize(CENTS, rounding=ROUND_HALF_UP)
