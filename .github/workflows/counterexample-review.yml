@@ -62,6 +62,8 @@ jobs:
               `- Verdict: ${verdict}`,
               "",
               "Full receipt: see the workflow's uploaded artifact.",
+              "",
+              "_This is automated mutation testing only. It checks whether the PR's own tests would catch an injected bug — it does not verify the PR's logic against its stated requirements. For claim-level verification (checking the PR actually does what its linked issue says), run a full Counterexample review in Bob IDE using the Counterexample mode._",
             ].join("\n");
 
             github.rest.issues.createComment({
