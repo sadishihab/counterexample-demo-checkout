@@ -47,6 +47,9 @@ def calculate_total(items: list[LineItem], coupons: list[Coupon] | None = None) 
     passing two coupons of the same kind raises ValueError. The fixed coupon
     is applied first, and the percent coupon is applied to the subtotal,
     quantized to two decimal places using ROUND_HALF_UP.
+
+    Note: percent discount is currently computed from the pre-fixed-discount
+    subtotal; see review-evidence/ for known issues.
     """
     subtotal = calculate_subtotal(items)
     coupons = coupons or []
