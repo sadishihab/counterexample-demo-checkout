@@ -34,9 +34,10 @@ claim-3 — HELD
 Two fixed coupons → ValueError. Two percent coupons → ValueError. Mixed cases (2 fixed + 1 percent, 3 fixed) → all ValueError. 5/5 adversarial tests passed.
 This does not prove correctness in general, but no counterexample was found.
 
-claim-4 — HELD
-[fixed, percent] and [percent, fixed] both return 170.00 for subtotal=200, fixed=10, percent=10%.
-Note: This claim holds for the wrong reason. The implementation applies percent to the original subtotal regardless of list order, so order independence is achieved — but it contradicts claim-1. If claim-1 were fixed (percent applied to post-fixed total), order independence would break unless the implementation explicitly sorts by kind before applying.
+claim-4 — FALSIFIED
+Adversarial test: subtotal=200, fixed=10, percent=10%.
+Both [fixed, percent] and [percent, fixed] orderings return 170.00, so the two orderings agree with each other — but ISSUE-42 requires 171.00 (percent applied to the post-fixed remainder).
+Order-independence around an incorrect value is not considered holding: this is the same root bug as claim-1, not independent confirmation of correctness.
 
 claim-5 — FALSIFIED
 Adversarial test: calling the new function with the old convention calculate_total(items, coupon_object) (a bare Coupon, not a list).
@@ -52,7 +53,7 @@ Claim | Verdict | Severity
 Percent applies to post-fixed amount | FALSIFIED | Correct math, wrong implementation
 Total never below 0.00 | FALSIFIED | Floor clamp deleted, not replaced
 Duplicate kind raises ValueError | HELD | —
-Order-independent result | HELD | Holds for wrong reason; breaks if claim-1 is fixed
+Order-independent result | FALSIFIED | Holds only if you don't check against the spec value — same bug as claim-1
 Backward compat with bare Coupon arg | FALSIFIED | Silent breaking change for all existing callers
 
-3 of 5 claims are falsified with real failing tests. The PR should not be merged as-is.
+4 of 5 claims are falsified with real failing tests; only claim-3 (duplicate-kind raises ValueError) holds. The PR should not be merged as-is.

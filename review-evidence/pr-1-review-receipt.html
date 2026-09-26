@@ -37,6 +37,19 @@
   .focus-map { padding-left: 1.25rem; }
   .focus-map li { margin-bottom: 0.25rem; }
   code { background: #eee; padding: 0.1rem 0.3rem; border-radius: 3px; }
+  .error-item {
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+    background: #fff8e1;
+    border-left: 4px solid #f39c12;
+  }
+  .error-item pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0.5rem 0 0 0;
+    font-size: 0.85rem;
+  }
 </style>
 </head>
 <body>
@@ -60,10 +73,10 @@
       <div class="claim-text">Applying two coupons of the same kind raises ValueError (ISSUE-42 requirement 4)</div>
       <div class="claim-detail">5/5 adversarial tests passed (two fixed, two percent, and mixed combinations). Does not prove correctness in general, but no counterexample was found.</div>
     </div>
-    <div class="claim held">
-      <div class="claim-label">✓ HELD</div>
+    <div class="claim falsified">
+      <div class="claim-label">✗ FALSIFIED</div>
       <div class="claim-text">Result is independent of coupon list order (ISSUE-42 requirement 1 + PR docstring)</div>
-      <div class="claim-detail">[fixed, percent] and [percent, fixed] both return 170.00. Note: holds for the wrong reason — percent is applied to the original subtotal regardless of order, which contradicts claim-1. If claim-1 were fixed, order independence could break.</div>
+      <div class="claim-detail">subtotal=200, fixed=10, percent=10%. Both [fixed, percent] and [percent, fixed] orderings return 170.00, so the two orderings agree with each other — but ISSUE-42 requires 171.00 (percent applied to the post-fixed remainder). Order-independence around an incorrect value is not considered holding: this is the same root bug as claim-1, not independent confirmation of correctness.</div>
     </div>
     <div class="claim falsified">
       <div class="claim-label">✗ FALSIFIED</div>
@@ -74,5 +87,6 @@
   <h2>Mutation testing</h2>
   <p class="score">100%</p>
   <p>No surviving mutants — every mutation on changed lines was caught.</p>
+  
 </body>
 </html>
