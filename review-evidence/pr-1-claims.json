@@ -1,0 +1,32 @@
+[
+  {
+    "claim_id": "claim-1",
+    "text": "Percent coupon applies to the amount remaining after the fixed discount, not the original subtotal (ISSUE-42 requirement 2)",
+    "verdict": "FALSIFIED",
+    "detail": "subtotal=200, fixed=10, percent=10%. Expected 171.00 (percent applied to post-fixed 190), got 170.00. checkout/pricing.py computes percent discount from the original subtotal instead of the post-fixed total."
+  },
+  {
+    "claim_id": "claim-2",
+    "text": "Order total never goes below 0.00 (ISSUE-42 requirement 3)",
+    "verdict": "FALSIFIED",
+    "detail": "subtotal=10, fixed coupon=50 (larger than subtotal). Got -40.00. The zero-floor clamp (max(total, ZERO)) present in the single-coupon version was deleted in this PR and never replaced."
+  },
+  {
+    "claim_id": "claim-3",
+    "text": "Applying two coupons of the same kind raises ValueError (ISSUE-42 requirement 4)",
+    "verdict": "HELD",
+    "detail": "5/5 adversarial tests passed (two fixed, two percent, and mixed combinations). Does not prove correctness in general, but no counterexample was found."
+  },
+  {
+    "claim_id": "claim-4",
+    "text": "Result is independent of coupon list order (ISSUE-42 requirement 1 + PR docstring)",
+    "verdict": "HELD",
+    "detail": "[fixed, percent] and [percent, fixed] both return 170.00. Note: holds for the wrong reason — percent is applied to the original subtotal regardless of order, which contradicts claim-1. If claim-1 were fixed, order independence could break."
+  },
+  {
+    "claim_id": "claim-5",
+    "text": "Existing single-coupon and no-coupon call sites still work (ISSUE-42 backward compatibility)",
+    "verdict": "FALSIFIED",
+    "detail": "Calling calculate_total(items, coupon_object) with the old single-coupon convention raises TypeError: 'Coupon' object is not iterable at checkout/pricing.py:54. Silent breaking change for all existing callers."
+  }
+]

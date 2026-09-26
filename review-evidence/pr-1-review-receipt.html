@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Review Receipt — feature/stacked-coupons vs main</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    margin: 0;
+    padding: 2rem;
+    background: #f7f7f8;
+    color: #1a1a1a;
+  }
+  h1 { margin: 0 0 0.5rem 0; font-size: 1.5rem; }
+  h2 { margin-top: 2rem; font-size: 1.1rem; }
+  .banner {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-weight: bold;
+    color: #fff;
+    margin-bottom: 1.5rem;
+  }
+  .banner.bugs-found { background: #c0392b; }
+  .banner.looks-solid { background: #27ae60; }
+  .claim {
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+  }
+  .claim.falsified { background: #fdecea; border-left: 4px solid #c0392b; }
+  .claim.held { background: #eafaf1; border-left: 4px solid #27ae60; }
+  .claim-label { font-weight: bold; }
+  .claim-text { margin-top: 0.25rem; }
+  .claim-detail { margin-top: 0.25rem; color: #555; font-size: 0.9rem; }
+  .score { font-size: 1.75rem; font-weight: bold; }
+  .focus-map { padding-left: 1.25rem; }
+  .focus-map li { margin-bottom: 0.25rem; }
+  code { background: #eee; padding: 0.1rem 0.3rem; border-radius: 3px; }
+</style>
+</head>
+<body>
+  <h1>Review Receipt: feature/stacked-coupons vs main</h1>
+  <div class="banner bugs-found">BUGS FOUND</div>
+
+  <h2>Claims</h2>
+  
+    <div class="claim falsified">
+      <div class="claim-label">✗ FALSIFIED</div>
+      <div class="claim-text">Percent coupon applies to the amount remaining after the fixed discount, not the original subtotal (ISSUE-42 requirement 2)</div>
+      <div class="claim-detail">subtotal=200, fixed=10, percent=10%. Expected 171.00 (percent applied to post-fixed 190), got 170.00. checkout/pricing.py computes percent discount from the original subtotal instead of the post-fixed total.</div>
+    </div>
+    <div class="claim falsified">
+      <div class="claim-label">✗ FALSIFIED</div>
+      <div class="claim-text">Order total never goes below 0.00 (ISSUE-42 requirement 3)</div>
+      <div class="claim-detail">subtotal=10, fixed coupon=50 (larger than subtotal). Got -40.00. The zero-floor clamp (max(total, ZERO)) present in the single-coupon version was deleted in this PR and never replaced.</div>
+    </div>
+    <div class="claim held">
+      <div class="claim-label">✓ HELD</div>
+      <div class="claim-text">Applying two coupons of the same kind raises ValueError (ISSUE-42 requirement 4)</div>
+      <div class="claim-detail">5/5 adversarial tests passed (two fixed, two percent, and mixed combinations). Does not prove correctness in general, but no counterexample was found.</div>
+    </div>
+    <div class="claim held">
+      <div class="claim-label">✓ HELD</div>
+      <div class="claim-text">Result is independent of coupon list order (ISSUE-42 requirement 1 + PR docstring)</div>
+      <div class="claim-detail">[fixed, percent] and [percent, fixed] both return 170.00. Note: holds for the wrong reason — percent is applied to the original subtotal regardless of order, which contradicts claim-1. If claim-1 were fixed, order independence could break.</div>
+    </div>
+    <div class="claim falsified">
+      <div class="claim-label">✗ FALSIFIED</div>
+      <div class="claim-text">Existing single-coupon and no-coupon call sites still work (ISSUE-42 backward compatibility)</div>
+      <div class="claim-detail">Calling calculate_total(items, coupon_object) with the old single-coupon convention raises TypeError: &#x27;Coupon&#x27; object is not iterable at checkout/pricing.py:54. Silent breaking change for all existing callers.</div>
+    </div>
+
+  <h2>Mutation testing</h2>
+  <p class="score">100%</p>
+  <p>No surviving mutants — every mutation on changed lines was caught.</p>
+</body>
+</html>
